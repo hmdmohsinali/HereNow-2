@@ -117,17 +117,7 @@ export const getAllNews = async (req, res) => {
             sortBy = { createdAt: -1 }; // Default to sorting by creation date (latest first)
         }
 
-        // If 'typeNews' is provided, apply filtering
-        if (typeNews === 'recent') {
-            // Filtering for recent news
-            const twoDaysAgo = new Date();
-            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-            qury.createdAt = { $gte: twoDaysAgo }; // Only news created within the last 2 days
-            sortBy = { createdAt: -1 }; // Sort by creation date in descending order (latest first)
-        } else if (typeNews) {
-            // If 'typeNews' is not 'recent', apply it as a filter (e.g., "Sports", "Environment")
-            qury.typeNews = typeNews; // Assuming `typeNews` is the field for category (adjust if needed)
-        }
+        
 
         // Fetch the news based on the constructed query and sorting criteria
         const news = await News.find(qury)
@@ -149,10 +139,7 @@ export const getAllNews = async (req, res) => {
             return res.status(404).json({ message: "No News found for the given filter request." });
         }
 
-        // If no filter (other than typeNews) is applied, sort by score as the default behavior
-        if (!typeNews) {
-            newsWithScores.sort((a, b) => b.score - a.score); // Sort by score if no filter is applied
-        }
+        
 
         return res.status(200).json({ message: "All data is fetched successfully", newsWithScores });
     } catch (e) {
