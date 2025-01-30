@@ -23,11 +23,11 @@ const newsSchema = new mongoose.Schema({
         required:true
     },
     image: {
-        type: String, // You can change this to Object if you're storing more than just a URL
+        type: String,
         required: true,
     },
     video: {
-        type: String, // You can change this to Object if you store more info about video
+        type: String,// You can change this to Object if you store more info about video
         default: null,
     },
     typeNews: {

@@ -3,7 +3,7 @@ import calculatePopularityScore from "../../utlise/news_score.js";
 
 
 export const addNews = async (req, res) => {
-    const {title, description, image, video, typeNews, category, lat, long, location } = req.body;
+    const {title, description, image, video, typeNews, category, lat, long, location, city, state, country } = req.body;
     const userId = req.user.id; // Extract the user ID from the JWT token (middleware should set this)
     try {
         // Validate required fields
