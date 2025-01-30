@@ -101,51 +101,59 @@ export const addNews = async (req, res) => {
 
 
 export const getAllNews = async (req, res) => {
-    try {
-      // Fetch all news (no filtering by typeNews or category)
-      const news = await News.find({})
-        .populate("rating", "ratingValue userId") // Include userId to check if current user has rated
-        .populate("user", "firstName lastName image")
-        .sort({ createdAt: -1 }) // Default sorting by latest created news first
-        .lean();
-  
-      // If no news found, return 404
-      if (!news || news.length === 0) {
-        return res.status(404).json({ message: "No News found." });
-      }
-  
-      const userId = req.user?.id; // or req.user.id if that is how you store it
+  try {
+    // Fetch all news (no filtering by typeNews or category)
+    const news = await News.find({})
+      .populate("rating", "ratingValue userId") // Include userId to check if current user has rated
+      .populate("user", "firstName lastName image")
+      .sort({ createdAt: -1 }) // Default sorting by latest created news first
+      .lean();
 
-const newsWithScores = news.map((newsItem) => {
-  let userHasRated = false;
-
-  if (userId) {
-    // Compare the IDs as strings to avoid ObjectId vs string issues
-    userHasRated = newsItem.rating?.some(
-      (r) => r.userId?.toString() === userId.toString()
-    );
-  }
-
-  return {
-    ...newsItem,
-    commentsCount: newsItem.newsComments ? newsItem.newsComments.length : 0,
-    score: calculatePopularityScore(newsItem),
-    isRated: userHasRated,
-  };
-});
-  
-      return res.status(200).json({
-        message: "All data is fetched successfully",
-        newsWithScores,
-      });
-    } catch (e) {
-      console.error(e);
-      return res.status(500).json({
-        message: "An error occurred while fetching the news.",
-        error: e,
-      });
+    // If no news found, return 404
+    if (!news || news.length === 0) {
+      return res.status(404).json({ message: "No News found." });
     }
-  };
+
+    const userId = req.user?.id; // or req.user.id if that is how you store it
+
+    const newsWithScores = news.map((newsItem) => {
+      let userHasRated = false;
+
+      if (userId) {
+        // Compare the IDs as strings to avoid ObjectId vs string issues
+        userHasRated = newsItem.rating?.some(
+          (r) => r.userId?.toString() === userId.toString()
+        );
+      }
+
+      // Calculate average rating
+      let averageRating = 0;
+      if (newsItem.rating && newsItem.rating.length > 0) {
+        const totalRating = newsItem.rating.reduce((sum, r) => sum + r.ratingValue, 0);
+        averageRating = totalRating / newsItem.rating.length;
+      }
+
+      return {
+        ...newsItem,
+        commentsCount: newsItem.newsComments ? newsItem.newsComments.length : 0,
+        averageRating: averageRating.toFixed(2), // Rounded to 2 decimal places
+        score: calculatePopularityScore(newsItem), // You can adjust this if needed
+        isRated: userHasRated,
+      };
+    });
+
+    return res.status(200).json({
+      message: "All data is fetched successfully",
+      newsWithScores,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      message: "An error occurred while fetching the news.",
+      error: e,
+    });
+  }
+};
 
 
 // Update News
