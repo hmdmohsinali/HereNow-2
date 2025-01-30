@@ -101,52 +101,54 @@ export const addNews = async (req, res) => {
 
 
 export const getAllNews = async (req, res) => {
-    const { typeNews, category } = req.query;
-
     try {
-        // Ensure the category is provided
-        if (!category) {
-            return res.status(400).json({ message: "Category is required." });
+      // Fetch all news (no filtering by typeNews or category)
+      const news = await News.find({})
+        .populate("rating", "ratingValue userId") // Include userId to check if current user has rated
+        .populate("user", "firstName lastName image")
+        .sort({ createdAt: -1 }) // Default sorting by latest created news first
+        .lean();
+  
+      // If no news found, return 404
+      if (!news || news.length === 0) {
+        return res.status(404).json({ message: "No News found." });
+      }
+  
+      // Current user ID (assuming it's attached via JWT middleware)
+      const userId = req.user?._id;
+  
+      // Build the response array with 'commentsCount', 'score', and 'isRated'
+      const newsWithScores = news.map((newsItem) => {
+        let userHasRated = false;
+        if (userId) {
+          // Check if the current user has any rating in this news's rating array
+          userHasRated = newsItem.rating?.some(
+            (r) => r.userId?.toString() === userId.toString()
+          );
         }
-
-        let qury = { category }; // Start with category filter
-        let sortBy = {}; // Sort criteria
-
-        // If no 'typeNews' query is provided, fetch all news sorted by score by default
-        if (!typeNews) {
-            sortBy = { createdAt: -1 }; // Default to sorting by creation date (latest first)
-        }
-
-        
-
-        // Fetch the news based on the constructed query and sorting criteria
-        const news = await News.find(qury)
-            .populate("rating", "ratingValue") // Populating rating with only the ratingValue field
-            .populate("user", "firstName lastName image") // Populating user with firstName, lastName, and image only
-            .sort(sortBy) // Apply the sort here directly in the query
-            .lean(); // .lean() will return a plain JavaScript object, not a Mongoose document
-
-        // Manually calculate the length of the newsComments array and score
-        const newsWithScores = news.map((newsItem) => {
-            return {
-                ...newsItem,
-                commentsCount: newsItem.newsComments ? newsItem.newsComments.length : 0, // Calculate the length of comments
-                score: calculatePopularityScore(newsItem), // Assuming this is a function to calculate score
-            };
-        });
-
-        if (!news || news.length === 0) {
-            return res.status(404).json({ message: "No News found for the given filter request." });
-        }
-
-        
-
-        return res.status(200).json({ message: "All data is fetched successfully", newsWithScores });
+  
+        return {
+          ...newsItem,
+          commentsCount: newsItem.newsComments
+            ? newsItem.newsComments.length
+            : 0,
+          score: calculatePopularityScore(newsItem),
+          isRated: userHasRated,
+        };
+      });
+  
+      return res.status(200).json({
+        message: "All data is fetched successfully",
+        newsWithScores,
+      });
     } catch (e) {
-        console.error(e);
-        return res.status(500).json({ message: "An error occurred while fetching the news.", error: e });
+      console.error(e);
+      return res.status(500).json({
+        message: "An error occurred while fetching the news.",
+        error: e,
+      });
     }
-};
+  };
 
 
 // Update News
