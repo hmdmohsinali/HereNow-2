@@ -114,28 +114,25 @@ export const getAllNews = async (req, res) => {
         return res.status(404).json({ message: "No News found." });
       }
   
-      // Current user ID (assuming it's attached via JWT middleware)
-      const userId = req.user?._id;
-  
-      // Build the response array with 'commentsCount', 'score', and 'isRated'
-      const newsWithScores = news.map((newsItem) => {
-        let userHasRated = false;
-        if (userId) {
-          // Check if the current user has any rating in this news's rating array
-          userHasRated = newsItem.rating?.some(
-            (r) => r.userId?.toString() === userId.toString()
-          );
-        }
-  
-        return {
-          ...newsItem,
-          commentsCount: newsItem.newsComments
-            ? newsItem.newsComments.length
-            : 0,
-          score: calculatePopularityScore(newsItem),
-          isRated: userHasRated,
-        };
-      });
+      const userId = req.user?._id; // or req.user.id if that is how you store it
+
+const newsWithScores = news.map((newsItem) => {
+  let userHasRated = false;
+
+  if (userId) {
+    // Compare the IDs as strings to avoid ObjectId vs string issues
+    userHasRated = newsItem.rating?.some(
+      (r) => r.userId?.toString() === userId.toString()
+    );
+  }
+
+  return {
+    ...newsItem,
+    commentsCount: newsItem.newsComments ? newsItem.newsComments.length : 0,
+    score: calculatePopularityScore(newsItem),
+    isRated: userHasRated,
+  };
+});
   
       return res.status(200).json({
         message: "All data is fetched successfully",
