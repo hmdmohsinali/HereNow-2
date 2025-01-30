@@ -4,7 +4,7 @@ import News from "../../model/news/news.js";
 export const addNewsRating = async (req, res) => {
     const { newsId, ratingValue } = req.body;
     // Use _id if your JWT middleware sets req.user._id
-    const userId = req.user._id;
+    const userId = req.user.id;
   
     try {
       if (!newsId || !ratingValue) {

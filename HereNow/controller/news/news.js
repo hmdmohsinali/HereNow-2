@@ -114,7 +114,7 @@ export const getAllNews = async (req, res) => {
         return res.status(404).json({ message: "No News found." });
       }
   
-      const userId = req.user?._id; // or req.user.id if that is how you store it
+      const userId = req.user?.id; // or req.user.id if that is how you store it
 
 const newsWithScores = news.map((newsItem) => {
   let userHasRated = false;
