@@ -3,10 +3,10 @@ import eventScoreCalculation from "../../utlise/event_score.js";
 
 export const addEvents = async (req, res) => {
     try {
-        const { title,description, image, video, lat, long, location, contact, price, startDate, endDate } = req.body;
+        const { title,description, image, video, lat, long, location, contact, price, startDate, endDate, city, state, country } = req.body;
 
         // Validate required fields
-        if (!description || !lat || !long || !location || !contact || !price || !startDate || !endDate) {
+        if (!description || !lat || !long || !location || !contact || !price || !startDate || !endDate || !city || !state || !country) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
@@ -27,6 +27,9 @@ export const addEvents = async (req, res) => {
             user: userId,
             startDate,
             endDate,
+            city,
+            state,
+            country,
         });
 
         await event.save();

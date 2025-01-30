@@ -50,6 +50,18 @@ const eventSchema = mongoose.Schema({
         type: Date,
         required: true,
     },
+    city: {
+        type: String,
+        required: true,
+    },
+    state: {
+        type: String,
+        required: true,
+    },
+    country: {
+        type: String,
+        required: true,
+    },
     rating: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventRating' }],
     ratedBy: [{
         type: mongoose.Schema.Types.ObjectId,
