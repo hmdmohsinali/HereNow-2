@@ -4,13 +4,15 @@ import NewsComments from "../../model/news/comments.js";
 export const addNewsComments = async (req, res) => {
     try {
         const { content, newsId } = req.body;
-        const userId = req.user.id; // Get the userId from the verified token (added by middleware)
-        console.log(userId);
+        const userId = req.user.id; // Ensure consistent user ID retrieval
+
+        console.log('User ID:', userId);
+        console.log('News ID:', newsId);
+        console.log('Content:', content);
 
         // Validate input
         if (!content) {
             return res.status(400).json({ message: "Content is required for the comment." });
-
         }
 
         if (!newsId || !userId) {
@@ -34,15 +36,28 @@ export const addNewsComments = async (req, res) => {
         const savedComment = await newComment.save();
 
         // Update the News collection to reference this comment
-        await News.updateOne(
-            { _id: newsId },
-            { $push: { newsComments: savedComment._id } } // Reference the saved rating's ID
-        );
-        console.log(savedComment._id);
-        return res.status(201).json({ message: "Comment added successfully.", comment: savedComment });
+        news.newsComments.push(savedComment._id);
+        await news.save();
+
+        console.log('Saved Comment ID:', savedComment._id);
+
+        // Fetch the updated list of comments for this news item
+        const updatedComments = await NewsComments.find({ newsId: newsId })
+            .populate('user', 'firstName lastName image') // Populate user details
+            .sort({ createdAt: -1 }) // Optional: Sort comments (e.g., latest first)
+            .lean(); // Return plain JavaScript objects
+
+        return res.status(201).json({ 
+            message: "Comment added successfully.", 
+            comment: savedComment,
+            updatedComments: updatedComments // Include the updated comments list
+        });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "An error occurred while adding the comment." });
+        console.error('Error adding comment:', error);
+        return res.status(500).json({ 
+            message: "An error occurred while adding the comment.", 
+            error: error.message 
+        });
     }
 };
 ///GetNews Comment
