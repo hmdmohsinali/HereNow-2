@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import Admin from "../model/auth/Admin.js"; // Adjust the path as needed
 import User from "../model/auth/auth.js";
+import News from "../model/news/news.js";
 
 const router = express.Router();
 
@@ -31,12 +32,10 @@ router.post("/signup", async (req, res) => {
     });
 
     await newAdmin.save();
-    res
-      .status(201)
-      .json({
-        message: "Admin registered successfully",
-        adminId: newAdmin._id,
-      });
+    res.status(201).json({
+      message: "Admin registered successfully",
+      adminId: newAdmin._id,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -119,23 +118,224 @@ router.delete("/delUser/:id", checkAdmin, async (req, res) => {
 });
 
 router.patch("/changeStatus/:id", checkAdmin, async (req, res) => {
-    try {
-        const { status } = req.body;
-        if (!["active", "suspended"].includes(status)) {
-            return res.status(400).json({ message: "Invalid status. Use 'active' or 'suspended'." });
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, { status }, { new: true, select: "firstName lastName email status" });
-        if (!updatedUser) return res.status(404).json({ message: "User not found" });
-
-        res.status(200).json({ message: `User status updated to ${status}`, updatedUser });
-
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+  try {
+    const { status } = req.body;
+    if (!["active", "suspended"].includes(status)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid status. Use 'active' or 'suspended'." });
     }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, select: "firstName lastName email status" }
+    );
+    if (!updatedUser)
+      return res.status(404).json({ message: "User not found" });
+
+    res
+      .status(200)
+      .json({ message: `User status updated to ${status}`, updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+router.get("/getNews", checkAdmin, async (req, res) => {
+  try {
+    const newsList = await News.find(
+      {},
+      "title description city state country image createdAt views score"
+    );
+
+    // Calculate total ratings & average rating for each news item
+    const newsWithRatings = await Promise.all(
+      newsList.map(async (news) => {
+        const ratings = await NewsRatings.find({ newsId: news._id });
+        const totalRatings = ratings.length;
+        const averageRating =
+          totalRatings > 0
+            ? ratings.reduce((sum, rate) => sum + rate.ratingValue, 0) /
+              totalRatings
+            : 0;
+
+        return {
+          ...news.toObject(),
+          totalRatings,
+          averageRating: parseFloat(averageRating.toFixed(2)),
+        };
+      })
+    );
+
+    res.status(200).json(newsWithRatings);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+router.get("/singleNews/:id", async (req, res) => {
+  try {
+    const news = await News.findById(req.params.id).populate(
+      "user",
+      "firstName lastName email"
+    );
+
+    if (!news) return res.status(404).json({ message: "News not found" });
+
+    // Fetch total ratings & average rating
+    const ratings = await NewsRatings.find({ newsId: news._id });
+    const totalRatings = ratings.length;
+    const averageRating =
+      totalRatings > 0
+        ? ratings.reduce((sum, rate) => sum + rate.ratingValue, 0) /
+          totalRatings
+        : 0;
+
+    // Fetch comments separately with user details
+    const comments = await NewsComments.find({ newsId: news._id })
+      .populate("user", "firstName lastName email image") // Populate user details
+      .sort({ createdAt: -1 }); // Sort comments by latest
+
+    res.status(200).json({
+      ...news.toObject(),
+      totalRatings,
+      averageRating: parseFloat(averageRating.toFixed(2)),
+      comments, // Include properly structured comments
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+router.post("/addNews", checkAdmin, async (req, res) => {
+  const {
+    title,
+    description,
+    image,
+    video,
+    typeNews,
+    category,
+    lat,
+    long,
+    location,
+    city,
+    state,
+    country,
+  } = req.body;
+  const userId = req.query.id; // Extract the user ID from the JWT token (middleware should set this)
+  try {
+    // Validate required fields
+    if (
+      !description ||
+      !image ||
+      !typeNews ||
+      !category ||
+      !lat ||
+      !long ||
+      !location ||
+      !city ||
+      !state ||
+      !country
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Create a new news document with the user ID reference
+    const news = new News({
+      title,
+      description,
+      image,
+      video,
+      typeNews,
+      category,
+      lat,
+      long,
+      location,
+      city,
+      state,
+      country,
+      user: userId, // Link the user who is creating the news
+    });
+
+    // Save the news document to the database
+    await news.save();
+
+    // Return a success response with a 201 status code (resource created)
+    return res.status(201).json({ message: "News posted successfully", news });
+  } catch (e) {
+    console.error(e); // Log the error for debugging purposes
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.put("/editNews/:newsId", checkAdmin, async (req, res) => {
+  const { newsId } = req.params;
+  const {
+    title,
+    description,
+    image,
+    video,
+    typeNews,
+    category,
+    lat,
+    long,
+    location,
+    city,
+    state,
+    country,
+  } = req.body;
+
+  try {
+    // Find and update the news article
+    const updatedNews = await News.findByIdAndUpdate(
+      newsId,
+      {
+        title,
+        description,
+        image,
+        video,
+        typeNews,
+        category,
+        lat,
+        long,
+        location,
+        city,
+        state,
+        country,
+      },
+      { new: true }
+    );
+
+    if (!updatedNews) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "News updated successfully", updatedNews });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 });
 
 
+router.delete("/deleteNews/:newsId", checkAdmin, async (req, res) => {
+  const { newsId } = req.params;
 
+  try {
+    const deletedNews = await News.findByIdAndDelete(newsId);
+
+    if (!deletedNews) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    return res.status(200).json({ message: "News deleted successfully" });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 export default router;
