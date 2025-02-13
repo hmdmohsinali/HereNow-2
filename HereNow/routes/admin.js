@@ -218,8 +218,6 @@ router.post("/addNews", checkAdmin, async (req, res) => {
     video,
     typeNews,
     category,
-    lat,
-    long,
     location,
     city,
     state,
@@ -233,8 +231,6 @@ router.post("/addNews", checkAdmin, async (req, res) => {
       !image ||
       !typeNews ||
       !category ||
-      !lat ||
-      !long ||
       !location ||
       !city ||
       !state ||
@@ -388,7 +384,6 @@ router.get("/getEvents", checkAdmin, async (req, res) => {
             "title description city state country image createdAt views score"
         );
 
-        // Calculate total ratings & average rating for each event
         const eventsWithRatings = await Promise.all(
             eventList.map(async (event) => {
                 const ratings = await EventRating.find({ eventId: event._id });
