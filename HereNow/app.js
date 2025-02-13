@@ -4,9 +4,11 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import newRoutes from "./routes/news.js"
 import eventRoute from "./routes/event.js"
+import cors from "cors";
 dotenv.config(); // Load environment variables from .env file
 
 // Connect to MongoDB
+app.use(cors());
 mongoose
   .connect(process.env.MONGO_URI, {})
   .then(() => {
