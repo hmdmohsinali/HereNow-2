@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import newRoutes from "./routes/news.js"
 import eventRoute from "./routes/event.js"
+import adminRoutes from './routes/admin.js'
 import cors from "cors";
 const app = express();
 dotenv.config(); // Load environment variables from .env file
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use("/api/user/auth", authRoutes);
 app.use("/api/news",newRoutes)
 app.use("/api/events",eventRoute);
+app.use('/admin', adminRoutes)
 app.get("/", (req, res) => {
   res.status(200).json({ 
       message: "Welcome to the API! Is Running Sucessfully----->>>>",

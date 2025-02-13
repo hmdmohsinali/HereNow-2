@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema({
     type: String, // Changed from Number to String
     trim: true,   // Removes leading and trailing spaces
   },
+  status:{
+    type:String,
+    default:"active"
+  }
 }, {
   timestamps: true, // Automatically add `createdAt` and `updatedAt` fields
 });
