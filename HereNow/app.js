@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.js";
 import newRoutes from "./routes/news.js"
 import eventRoute from "./routes/event.js"
 import cors from "cors";
+const app = express();
 dotenv.config(); // Load environment variables from .env file
 
 // Connect to MongoDB
@@ -18,7 +19,7 @@ mongoose
     console.error(`Error connecting mongoose: ${e}`);
   });
 
-const app = express();
+
 app.use(express.json());
 ////ROUTES
 app.use("/api/user/auth", authRoutes);
