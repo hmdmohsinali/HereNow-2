@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import Admin from "../model/auth/Admin.js"; // Adjust the path as needed
 import User from "../model/auth/auth.js";
 import News from "../model/news/news.js";
+import NewsRatings from "../model/news/rating.js";
+import EventRating from "../model/event/rating.js";
 
 const router = express.Router();
 
@@ -376,6 +378,37 @@ router.post("/addEvent", checkAdmin, async (req, res) => {
     } catch (e) {
         console.error(e);
         return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+router.get("/getEvents", checkAdmin, async (req, res) => {
+    try {
+        const eventList = await Event.find(
+            {},
+            "title description city state country image createdAt views score"
+        );
+
+        // Calculate total ratings & average rating for each event
+        const eventsWithRatings = await Promise.all(
+            eventList.map(async (event) => {
+                const ratings = await EventRating.find({ eventId: event._id });
+                const totalRatings = ratings.length;
+                const averageRating =
+                    totalRatings > 0
+                        ? ratings.reduce((sum, rate) => sum + rate.ratingValue, 0) / totalRatings
+                        : 0;
+
+                return {
+                    ...event.toObject(),
+                    totalRatings,
+                    averageRating: parseFloat(averageRating.toFixed(2)),
+                };
+            })
+        );
+
+        res.status(200).json(eventsWithRatings);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 });
 
