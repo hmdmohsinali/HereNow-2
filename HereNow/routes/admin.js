@@ -338,4 +338,116 @@ router.delete("/deleteNews/:newsId", checkAdmin, async (req, res) => {
   }
 });
 
+
+// Add Event (Admin Only)
+router.post("/addEvent", checkAdmin, async (req, res) => {
+    try {
+        const { title, description, image, video, lat, long, location, contact, price, startDate, endDate, city, state, country } = req.body;
+
+        // Validate required fields
+        if (!description || !lat || !long || !location || !contact || !price || !startDate || !endDate || !city || !state || !country) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        const userId = req.query.id; // Extract admin user ID from query (middleware should set this)
+
+        // Create a new event
+        const event = new Event({
+            title,
+            description,
+            image,
+            video,
+            lat,
+            long,
+            location,
+            contact,
+            price,
+            user: userId,
+            startDate,
+            endDate,
+            city,
+            state,
+            country,
+        });
+
+        await event.save();
+
+        return res.status(201).json({ message: "Event added successfully", event });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+router.get("/singleEvent/:id",checkAdmin, async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id).populate("user", "firstName lastName email");
+
+        if (!event) return res.status(404).json({ message: "Event not found" });
+
+        res.status(200).json(event);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+
+router.delete("/deleteEvent/:eventId", checkAdmin, async (req, res) => {
+    const { eventId } = req.params;
+
+    try {
+        const deletedEvent = await Event.findByIdAndDelete(eventId);
+
+        if (!deletedEvent) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        return res.status(200).json({ message: "Event deleted successfully" });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+router.put("/editEvent/:eventId", checkAdmin, async (req, res) => {
+    const { eventId } = req.params;
+    const { title, description, image, video, lat, long, location, contact, price, startDate, endDate, city, state, country } = req.body;
+
+    try {
+        // Find and update the event
+        const updatedEvent = await Event.findByIdAndUpdate(
+            eventId,
+            {
+                title,
+                description,
+                image,
+                video,
+                lat,
+                long,
+                location,
+                contact,
+                price,
+                startDate,
+                endDate,
+                city,
+                state,
+                country,
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedEvent) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        return res.status(200).json({ message: "Event updated successfully", updatedEvent });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
+
+
 export default router;
