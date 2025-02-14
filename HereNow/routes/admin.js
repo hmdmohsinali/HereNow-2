@@ -5,6 +5,7 @@ import User from "../model/auth/auth.js";
 import News from "../model/news/news.js";
 import NewsRatings from "../model/news/rating.js";
 import EventRating from "../model/event/rating.js";
+import Event from "../model/event/event.js";
 
 const router = express.Router();
 
