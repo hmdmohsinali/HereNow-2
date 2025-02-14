@@ -148,7 +148,6 @@ router.get("/getNews", checkAdmin, async (req, res) => {
   try {
     const newsList = await News.find(
       {},
-      "title description city state country image createdAt views score"
     );
 
     // Calculate total ratings & average rating for each news item
@@ -225,7 +224,6 @@ router.post("/addNews", checkAdmin, async (req, res) => {
   } = req.body;
   const userId = req.query.id; // Extract the user ID from the JWT token (middleware should set this)
   try {
-    // Validate required fields
     if (
       !description ||
       !image ||
