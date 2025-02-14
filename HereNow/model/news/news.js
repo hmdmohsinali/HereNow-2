@@ -53,7 +53,6 @@ const newsSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId, // Reference to the User model
         ref: 'User', // Assuming you have a 'User' model to store user data
-      
     },
     createdAt: {
         type: Date,

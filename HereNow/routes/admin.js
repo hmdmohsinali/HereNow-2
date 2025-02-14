@@ -225,7 +225,7 @@ router.post("/addNews", checkAdmin, async (req, res) => {
     state,
     country,
   } = req.body;
-  const userId = req.query.id; // Extract the user ID from the JWT token (middleware should set this)
+  const userId = req.query.userId; // Extract the user ID from the JWT token (middleware should set this)
   try {
     if (
       !description ||
