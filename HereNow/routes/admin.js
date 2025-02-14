@@ -246,8 +246,6 @@ router.post("/addNews", checkAdmin, async (req, res) => {
       video,
       typeNews,
       category,
-      lat,
-      long,
       location,
       city,
       state,
@@ -317,7 +315,6 @@ router.put("/editNews/:newsId", checkAdmin, async (req, res) => {
   }
 });
 
-
 router.delete("/deleteNews/:newsId", checkAdmin, async (req, res) => {
   const { newsId } = req.params;
 
@@ -335,8 +332,6 @@ router.delete("/deleteNews/:newsId", checkAdmin, async (req, res) => {
   }
 });
 
-
-// Add Event (Admin Only)
 router.post("/addEvent", checkAdmin, async (req, res) => {
     try {
         const { title, description, image, video, lat, long, location, contact, price, startDate, endDate, city, state, country } = req.body;
@@ -416,7 +411,6 @@ router.get("/singleEvent/:id",checkAdmin, async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 });
-
 
 router.delete("/deleteEvent/:eventId", checkAdmin, async (req, res) => {
     const { eventId } = req.params;
