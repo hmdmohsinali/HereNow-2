@@ -379,7 +379,6 @@ router.get("/getEvents", checkAdmin, async (req, res) => {
     try {
         const eventList = await Event.find(
             {},
-            "title description city state country image createdAt views score"
         );
 
         const eventsWithRatings = await Promise.all(
