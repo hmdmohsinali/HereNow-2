@@ -231,6 +231,8 @@ router.post("/addNews", checkAdmin, async (req, res) => {
       !typeNews ||
       !category ||
       !location ||
+      !lat ||
+      !long ||
       !city ||
       !state ||
       !country
@@ -244,6 +246,8 @@ router.post("/addNews", checkAdmin, async (req, res) => {
       description,
       image,
       video,
+      lat,
+      long,
       typeNews,
       category,
       location,
