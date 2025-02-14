@@ -334,10 +334,10 @@ router.delete("/deleteNews/:newsId", checkAdmin, async (req, res) => {
 
 router.post("/addEvent", checkAdmin, async (req, res) => {
     try {
-        const { title, description, image, video, lat, long, location, contact, price, startDate, endDate, city, state, country } = req.body;
+        const { title, description, image, video,  location, contact, price, startDate, endDate, city, state, country } = req.body;
 
         // Validate required fields
-        if (!description || !lat || !long || !location || !contact || !price || !startDate || !endDate || !city || !state || !country) {
+        if (!description || !location || !contact || !price || !startDate || !endDate || !city || !state || !country) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
@@ -349,8 +349,7 @@ router.post("/addEvent", checkAdmin, async (req, res) => {
             description,
             image,
             video,
-            lat,
-            long,
+           
             location,
             contact,
             price,
