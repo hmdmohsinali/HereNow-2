@@ -32,7 +32,7 @@ app.get("/", (req, res) => {
       message: "Welcome to the API! Is Running Sucessfully----->>>>",
   });
 });
-const PORT = process.env.PORT || 10000; // Use the PORT from .env, or default to 1000
+const PORT = process.env.PORT || 5000; // Use the PORT from .env, or default to 1000
 app.listen(PORT, () => {
   console.log(`Server Running At http://localhost:${PORT}`);
 });
