@@ -6,8 +6,9 @@ import newRoutes from "./routes/news.js"
 import eventRoute from "./routes/event.js"
 import adminRoutes from './routes/admin.js'
 import cors from "cors";
+import cron from 'node-cron';
 const app = express();
-dotenv.config(); // Load environment variables from .env file
+dotenv.config(); 
 
 // Connect to MongoDB
 app.use(cors());
@@ -20,9 +21,26 @@ mongoose
     console.error(`Error connecting mongoose: ${e}`);
   });
 
-
 app.use(express.json());
-////ROUTES
+
+const resetScores = async () => {
+  try {
+    console.log('Resetting scores...');
+    const eventResult = await Event.updateMany({}, { score: "0" });
+    console.log(`Reset score for ${eventResult.modifiedCount} event(s).`);
+
+    const newsResult = await News.updateMany({}, { score: 0 });
+    console.log(`Reset score for ${newsResult.modifiedCount} news item(s).`);
+  } catch (error) {
+    console.error('Error resetting scores:', error);
+  }
+};
+
+cron.schedule('0 0 * * *', () => {
+  console.log('Running scheduled resetScores job.');
+  resetScores();
+});
+
 app.use("/api/user/auth", authRoutes);
 app.use("/api/news",newRoutes)
 app.use("/api/events",eventRoute);
