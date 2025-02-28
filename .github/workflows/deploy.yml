@@ -3,8 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-        - main
-  # or specify other triggers, e.g. pull_request or specific branches.
+      - main
 
 jobs:
   deploy:
@@ -13,16 +12,23 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-        
-      
+
+      - name: Set up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keygen -lf ~/.ssh/id_rsa  # Debugging: Show the key fingerprint
+          cat ~/.ssh/id_rsa  # Debugging: Show the key (optional, remove later)
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
-            host: 34.207.122.207
-            username: ec2-user
-            key: ${{ secrets.EC2_SSH_KEY }}
-            script: |
-                cd ~/HereNow-2
-                git pull origin main
-                npm install
-                pm2 restart "herenow"
+          host: 34.207.122.207
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/HereNow-2
+            git pull origin main
+            npm install
+            pm2 restart "herenow"
