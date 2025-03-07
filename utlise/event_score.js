@@ -13,7 +13,7 @@ export default function eventScoreCalculation(events) {
 
     // Calculate score from ratings
     if (Array.isArray(events.rating)) {
-        events.rating.forEach((rating) => {
+        events.forEach((rating) => {
             console.log(`Rating Object:${JSON.stringify(rating)}`);
             const ratingValue = rating.ratingValue; // Extract the ratingValue field
             if (ratingValue === 1) {

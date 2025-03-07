@@ -25,20 +25,23 @@ export const addNewsComments = async (req, res) => {
             return res.status(404).json({ message: "News not found for the provided ID." });
         }
 
-        // Create the comment
+        // Create and save the comment
         const newComment = new NewsComments({
             user: userId,
             newsId: newsId,
             content: content,
         });
-
-        // Save the comment
         const savedComment = await newComment.save();
 
-        // Update the News collection to reference this comment
+        // Add comment reference to news
         news.newsComments.push(savedComment._id);
+        
+        // **Increment the score by 1**
+        news.score += 1;
+
         await news.save();
 
+        console.log('Updated Score:', news.score);
         console.log('Saved Comment ID:', savedComment._id);
 
         // Fetch the updated list of comments for this news item
@@ -50,7 +53,8 @@ export const addNewsComments = async (req, res) => {
         return res.status(201).json({ 
             message: "Comment added successfully.", 
             comment: savedComment,
-            updatedComments: updatedComments // Include the updated comments list
+            updatedComments: updatedComments, // Include the updated comments list
+            updatedScore: news.score // Include the updated score
         });
     } catch (error) {
         console.error('Error adding comment:', error);
@@ -60,6 +64,7 @@ export const addNewsComments = async (req, res) => {
         });
     }
 };
+
 ///GetNews Comment
 export const getNewsComments = async (req, res) => {
     const { newsId } = req.params;
