@@ -3,7 +3,7 @@ import Event from "../../model/event/event.js"; // Ensure you're importing the E
 
 export const addEventComment = async (req, res) => {
     try {
-        const userId = req.user.id; // Destructure directly
+        const userId = req.user.id;
         const { eventId, content } = req.body;
 
         // Validate inputs
@@ -11,34 +11,44 @@ export const addEventComment = async (req, res) => {
             return res.status(400).json({ message: "EventId and Comment are required" });
         }
 
-        // Optional: You can add validation to ensure eventId exists in the database
-        const eventExists = await Event.findById(eventId);
-        if (!eventExists) {
+        // Check if the event exists
+        const event = await Event.findById(eventId);
+        if (!event) {
             return res.status(404).json({ message: "Event not found" });
         }
 
         // Create a new comment
         const eventcomment = new EventComment({
-            eventId: eventId,  // Use 'event' as the reference to Event
-            user: userId,    // Use 'user' as the reference to User
-            content:content,
+            eventId: eventId,
+            user: userId,
+            content: content,
         });
 
         // Save the comment
         const savedComment = await eventcomment.save();
 
-        await Event.updateOne(
-            { _id: eventId },
-            { $push: { comment: savedComment._id } } // Reference the saved rating's ID
-        );
-        console.log(savedComment._id);
+        // Add comment reference and increment the score
+        event.comment.push(savedComment._id);
+        event.score += 1;  // **Increment the score by 1**
 
-        return res.status(200).json({ message: "Comment posted successfully" });
+        await event.save();
+
+        console.log('Updated Score:', event.score);
+        console.log('Saved Comment ID:', savedComment._id);
+
+        return res.status(200).json({ 
+            message: "Comment posted successfully",
+            updatedScore: event.score
+        });
     } catch (e) {
-        console.error(e); // Log the error for debugging
-        return res.status(500).json({ message: "Internal server error", error: e.message });
+        console.error(e);
+        return res.status(500).json({ 
+            message: "Internal server error", 
+            error: e.message 
+        });
     }
 };
+
 
 ///Get Event comments
 export const getEventComments = async (req, res) => {

@@ -18,8 +18,8 @@ export const addEventRating = async (req, res) => {
 
     try {
         // Check if the event exists
-        const eventExists = await Event.findById(eventId);
-        if (!eventExists) {
+        const event = await Event.findById(eventId);
+        if (!event) {
             return res.status(404).json({ message: "Event not found" });
         }
 
@@ -33,15 +33,17 @@ export const addEventRating = async (req, res) => {
         // Save the new rating
         const savedRating = await newRating.save();
 
-        // Push the rating ID into the event's ratings field
-        const eventUpdateResult = await Event.updateOne(
-            { _id: eventId },
-            { $push: { rating: savedRating._id } }
-        );
-        console.log('Event update result:', eventUpdateResult);
+        // Add rating reference and increment the score based on rating value
+        event.rating.push(savedRating._id);
+        event.score += ratingValue; // **Increment score based on ratingValue**
+
+        await event.save();
+
+        console.log('Updated Score:', event.score);
 
         return res.status(200).json({
             message: "Rating added successfully",
+            updatedScore: event.score,
             rating: savedRating,
         });
     } catch (e) {
@@ -49,6 +51,7 @@ export const addEventRating = async (req, res) => {
         return res.status(500).json({ message: "Internal server error", error: e.message });
     }
 };
+
 
 // **Read (Get All Ratings for an Event)**
 export const getEventRatings = async (req, res) => {
