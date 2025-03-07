@@ -137,7 +137,6 @@ export const getAllNews = async (req, res) => {
         ...newsItem,
         commentsCount: newsItem.newsComments ? newsItem.newsComments.length : 0,
         averageRating: averageRating.toFixed(2), // Rounded to 2 decimal places
-        score: calculatePopularityScore(newsItem), // You can adjust this if needed
         isRated: userHasRated,
       };
     });

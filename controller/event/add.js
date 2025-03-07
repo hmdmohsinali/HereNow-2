@@ -70,7 +70,6 @@ export const getEvents = async (req, res) => {
                     ...event, // Spread the event object
                     averageRating: averageRating.toFixed(2), // Add average rating, rounded to 2 decimals
                     userRated, // Add the userRated boolean
-                    score: eventScoreCalculation(event), // Calculate the event's score (custom logic)
                 };
             })
             .sort((a, b) => b.score - a.score); // Sort by score in descending order
