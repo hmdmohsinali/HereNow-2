@@ -7,6 +7,7 @@ import eventRoute from "./routes/event.js"
 import adminRoutes from './routes/admin.js'
 import cors from "cors";
 import cron from 'node-cron';
+import News from "./model/news/news.js";
 const app = express();
 dotenv.config(); 
 
